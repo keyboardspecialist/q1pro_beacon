@@ -1,5 +1,5 @@
 --- ../q1pro-klipper-backup/klipper_config/printer.cfg	2025-02-11 07:05:00.000000000 +0800
-+++ ../klipper_config/printer.cfg	2025-02-12 04:34:15.355774031 +0800
++++ ../klipper_config/printer.cfg	2025-02-13 00:01:30.920911012 +0800
 @@ -195,14 +195,15 @@
  full_steps_per_rotation: 200
  endstop_pin:probe:z_virtual_endstop #U_1:PC3 for Z-max
@@ -21,7 +21,7 @@
 @@ -217,19 +218,34 @@
  step_pulse_duration:0.0000001
  endstop_pin_reverse:tmc2209_stepper_z1:virtual_endstop
- 
+
 +# [z_tilt]
 +# z_positions:
 +#     -59,125
@@ -41,26 +41,26 @@
  z_positions:
      -59,125
      307.5,125
- 
+
  points:
 -    0,125
 -    215,125
 +    0, 125
 +    215, 125
- 
+
  speed: 150
  horizontal_move_z: 5
 -retries: 2
 -retry_tolerance: 0.05
 +retries: 5
 +retry_tolerance: 0.008
- 
+
  [tmc2240 stepper_y]
  cs_pin:U_1:PB9
-@@ -401,36 +417,58 @@
+@@ -401,36 +417,59 @@
  shutdown_value:0
  value:0
- 
+
 -[smart_effector]
 -pin:U_1:PC1
 -recovery_time:0
@@ -99,7 +99,7 @@
 +# z_offset:0.000001
 +
 +[beacon]
-+serial: {{beacon_device}}
++serial: {{beacon_dev}}
 +x_offset: 9                     # update with X offset from nozzle on your machine
 +y_offset: 0                # update with Y offset from nozzle on your machine
 +mesh_main_direction: x
@@ -119,34 +119,34 @@
 +home_gcode_post_y: _BEACON_HOME_POST_Y
 +contact_activate_gcode: _BEACON_CONTACT_PRE_Z
 +contact_deactivate_gcode: _BEACON_CONTACT_POST_Z
- 
+
  [bed_mesh]
--speed:150 
+-speed:150
 -horizontal_move_z:7
-+speed:250 
++speed:250
 +horizontal_move_z:2
- mesh_min:20,15      
--mesh_max:230,230    
--probe_count:8,8     
-+mesh_max:215,230    
-+probe_count:15,15     
+ mesh_min:20,15
+-mesh_max:230,230
+-probe_count:8,8
++mesh_max:215,230
++probe_count:15,15
  algorithm:bicubic
  bicubic_tension:0.2
  mesh_pps: 2, 2
 -vibrate_gcode:
 -    Z_DOUDONG
-+#vibrate_gcode:
-+#    Z_DOUDONG
- 
++fade_start: 2
++fade_end: 10
++fade_target: 0
+
  [filament_switch_sensor fila]
  pause_on_runout: True
-@@ -441,7 +479,7 @@
+@@ -441,7 +480,7 @@
  switch_pin:U_1:PC3
- 
+
  [resonance_tester]
 -accel_chip:adxl345
-+accel_chip:beacon #adxl345
++accel_chip: adxl345
  probe_points:
     120, 120, 10
- 
 
