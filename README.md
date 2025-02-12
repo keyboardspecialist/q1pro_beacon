@@ -22,7 +22,7 @@ The Beacon mount swaps the stock m3x25 screws for m3x16 to mount to the toolhead
 ## Pull this repo
 
 ```bash
-git clone git@github.com:qidi-community/Plus4-Wiki.git
+git clone git@github.com:keyboardspecialist/q1pro_beacon.git
 ```
 
 clone it into your Q1 home directory: `/home/mks`
