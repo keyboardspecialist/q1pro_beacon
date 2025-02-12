@@ -1,4 +1,4 @@
-# beacon3d install for Q1 Pro
+# Beacon3d Environment Setup for Q1 Pro
 ----
 
 Thanks to the guys over on the Qidi community wiki. This guide largely follows their work. https://github.com/qidi-community/Plus4-Wiki
@@ -6,6 +6,8 @@ Thanks to the guys over on the Qidi community wiki. This guide largely follows t
 Shroud is a remix of https://www.printables.com/model/1149931-qidi-q1-pro-improved-visibility-duct-remix/collections
 
 These instructions are for the Beacon3d RevH board.
+
+The mount and fan shroud provided are preliminary designs and aren't guaranteed to perform well with regards to both cooling and input shaping/resonance. 
 
 * [Pull](#pull-this-repo)
 * [Automated Script](#automated-script)
