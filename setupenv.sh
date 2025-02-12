@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 # Default paths - can be overridden with command line arguments
 KLIPPER_DIR="${HOME}/klipper"
 KLIPPY_ENV="${HOME}/klippy-env"
