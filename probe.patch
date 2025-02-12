@@ -1,0 +1,27 @@
+--- ../q1pro-klipper-backup/klipper/klippy/extras/probe.py	2024-08-31 10:12:40.000000000 +0800
++++ ../klipper/klippy/extras/probe.py	2025-02-12 01:24:39.520797632 +0800
+@@ -494,15 +494,15 @@
+             if self.gcode.break_flag:
+                 break
+             pos = probe.run_probe(gcmd)
+-            probe.probe_count += 1
+-            gcode = self.printer.lookup_object('gcode')
+-            if self.vibrate and probe.probe_count % self.vibrate == 0:
+-                commands = [
+-                    'G90',
+-                    'G1 Z'+ str(self.horizontal_move_z) + ' F300'
+-                ]
+-                gcode._process_commands(commands, False)
+-                self.vibrate_gcode.run_gcode_from_command()
++            probe.probe_count += 1            
++            #gcode = self.printer.lookup_object('gcode')
++            #if self.vibrate and probe.probe_count % self.vibrate == 0:
++            #    commands = [
++            #        'G90',
++            #        'G1 Z'+ str(self.horizontal_move_z) + ' F300'
++            #    ]
++            #    gcode._process_commands(commands, False)
++            #    self.vibrate_gcode.run_gcode_from_command()
+             self.results.append(pos)
+         probe.multi_probe_end()
+     def _manual_probe_start(self):
