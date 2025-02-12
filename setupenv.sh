@@ -43,19 +43,19 @@ log() {
 # Backup function
 backup_configs() {
     log "INFO" "Starting config backup..."
-    
+
 
     local backup_path="${BACKUP_DIR}"
-    
+
     if [ ! -d "$BACKUP_DIR" ]; then
         mkdir -p "$BACKUP_DIR"
     fi
-    
+
     if [ ! -d "$CONFIG_DIR" ]; then
         log "ERROR" "Config directory not found: $CONFIG_DIR"
         return 1
     fi
-    
+
     # Create backup
     mkdir -p "$backup_path"
     if (tar cvf - ${KLIPPER_DIR} ${CONFIG_DIR}) | (cd ${BACKUP_DIR}; tar xf -) then
@@ -70,12 +70,12 @@ backup_configs() {
 # Update Python packages
 update_python() {
     log "INFO" "Updating Python packages..."
-    
+
     if [ ! -d "$KLIPPER_DIR" ]; then
         log "ERROR" "Klipper directory not found: $KLIPPER_DIR"
         return 1
     fi
-    
+
     sudo service klipper stop
 
     cd $HOME
@@ -94,7 +94,7 @@ update_python() {
 
     sed -i 's/greenlet==1.1.2/greenlet==3.0.3/' $KLIPPER_DIR/scripts/klippy-requirements.txt # Need to upgrade this package for 3.12.
 
-    
+
     if bin/pip install -r $KLIPPER_DIR/scripts/klippy-requirements.txt; then
         log "INFO" "Python packages updated successfully"
     else
@@ -106,13 +106,13 @@ update_python() {
 # Install Beacon3D
 install_beacon3d() {
     log "INFO" "Installing Beacon3D..."
-    
+
     # Check if beacon_klipper directory already exists
     if [ -d "${HOME}/beacon_klipper" ]; then
         log "WARN" "Beacon3D directory already exists. Removing for fresh install..."
         rm -rf "${HOME}/beacon_klipper"
     fi
-    
+
     # Clone the repository
     cd "${HOME}" || exit 1
     if git clone https://github.com/beacon3d/beacon_klipper.git; then
@@ -121,7 +121,7 @@ install_beacon3d() {
         log "ERROR" "Failed to clone Beacon3D repository"
         return 1
     fi
-    
+
     # Run the install script
     cd "${HOME}/beacon_klipper" || exit 1
     if ./install.sh; then
@@ -135,25 +135,25 @@ install_beacon3d() {
 # Apply patches
 apply_patches() {
     log "INFO" "Applying patches..."
-    
+
     if [ ! -d "$PATCH_DIR" ]; then
         log "ERROR" "Patch directory not found: $PATCH_DIR"
         return 1
     fi
-    
+
     if [ ! -d "$KLIPPER_DIR" ]; then
         log "ERROR" "Klipper directory not found: $KLIPPER_DIR"
         return 1
     fi
-    
+
     # Navigate to Klipper directory
     cd "$KLIPPER_DIR" || exit 1
-    
+
     # Apply each patch file
     for patch_file in "$PATCH_DIR"/*.patch; do
         if [ -f "$patch_file" ]; then
             log "INFO" "Applying patch: $(basename "$patch_file")"
-            if [ "$patch_file" == "printer_cfg.patch" ]; then
+            if [ "$(basename "$patch_file")" = "printer_cfg.patch" ]; then
                 local bdev = $( ls /dev/serial/by-id/usb-Beacon* | head -n1 )
                 sed -i "s|{{beacon_dev}}|$bdev|g" "$patch_file"
             fi
