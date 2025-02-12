@@ -153,7 +153,11 @@ apply_patches() {
     for patch_file in "$PATCH_DIR"/*.patch; do
         if [ -f "$patch_file" ]; then
             log "INFO" "Applying patch: $(basename "$patch_file")"
-            if patch -p1 < "$patch_file"; then
+            if [ "$patch_file" == "printer_cfg.patch" ]; then
+                local bdev = $( ls /dev/serial/by-id/usb-Beacon* | head -n1 )
+                sed -i "s|{{beacon_dev}}|$bdev|g" "$patch_file"
+            fi
+            if patch < "$patch_file"; then
                 log "INFO" "Successfully applied patch: $(basename "$patch_file")"
             else
                 log "ERROR" "Failed to apply patch: $(basename "$patch_file")"
