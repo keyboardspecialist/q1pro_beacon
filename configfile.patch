@@ -1,0 +1,14 @@
+--- ../q1pro-klipper-backup/klipper/klippy/configfile.py	2024-08-31 10:12:40.000000000 +0800
++++ ../klipper/klippy/configfile.py	2025-02-12 00:04:47.163845867 +0800
+@@ -215,7 +215,10 @@
+         data = '\n'.join(buffer)
+         del buffer[:]
+         sbuffer = io.StringIO(data)
+-        fileconfig.readfp(sbuffer, filename)
++        if sys.version_info.major >= 3:
++	        fileconfig.read_file(sbuffer,filename)
++        else:
++	        fileconfig.readfp(sbuffer, filename)
+     def _resolve_include(self, source_filename, include_spec, fileconfig,
+                          visited):
+         dirname = os.path.dirname(source_filename)

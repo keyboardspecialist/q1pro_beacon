@@ -1,0 +1,81 @@
+--- ../q1pro-klipper-backup/klipper/klippy/extras/adxl345.py	2023-10-16 19:50:36.000000000 +0800
++++ ../klipper/klippy/extras/adxl345.py	2025-02-12 04:03:00.561153492 +0800
+@@ -339,6 +339,78 @@
+         adxl345.set_reg(REG_THRESH_TAP, int(self.tap_thresh / TAP_SCALE))
+         adxl345.set_reg(REG_DUR, int(self.tap_dur / DUR_SCALE))
+ 
++# Helper class for G-Code commands
++class AccelCommandHelper:
++    def __init__(self, config, chip):
++        self.printer = config.get_printer()
++        self.chip = chip
++        self.bg_client = None
++        name_parts = config.get_name().split()
++        self.base_name = name_parts[0]
++        self.name = name_parts[-1]
++        self.register_commands(self.name)
++        if len(name_parts) == 1:
++            if self.name == "adxl345" or not config.has_section("adxl345"):
++                self.register_commands(None)
++    def register_commands(self, name):
++        # Register commands
++        gcode = self.printer.lookup_object('gcode')
++        gcode.register_mux_command("ACCELEROMETER_MEASURE", "CHIP", name,
++                                   self.cmd_ACCELEROMETER_MEASURE,
++                                   desc=self.cmd_ACCELEROMETER_MEASURE_help)
++        gcode.register_mux_command("ACCELEROMETER_QUERY", "CHIP", name,
++                                   self.cmd_ACCELEROMETER_QUERY,
++                                   desc=self.cmd_ACCELEROMETER_QUERY_help)
++        gcode.register_mux_command("ACCELEROMETER_DEBUG_READ", "CHIP", name,
++                                   self.cmd_ACCELEROMETER_DEBUG_READ,
++                                   desc=self.cmd_ACCELEROMETER_DEBUG_READ_help)
++        gcode.register_mux_command("ACCELEROMETER_DEBUG_WRITE", "CHIP", name,
++                                   self.cmd_ACCELEROMETER_DEBUG_WRITE,
++                                   desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
++    cmd_ACCELEROMETER_MEASURE_help = "Start/stop accelerometer"
++    def cmd_ACCELEROMETER_MEASURE(self, gcmd):
++        if self.bg_client is None:
++            # Start measurements
++            self.bg_client = self.chip.start_internal_client()
++            gcmd.respond_info("accelerometer measurements started")
++            return
++        # End measurements
++        name = gcmd.get("NAME", time.strftime("%Y%m%d_%H%M%S"))
++        if not name.replace('-', '').replace('_', '').isalnum():
++            raise gcmd.error("Invalid NAME parameter")
++        bg_client = self.bg_client
++        self.bg_client = None
++        bg_client.finish_measurements()
++        # Write data to file
++        if self.base_name == self.name:
++            filename = "/tmp/%s-%s.csv" % (self.base_name, name)
++        else:
++            filename = "/tmp/%s-%s-%s.csv" % (self.base_name, self.name, name)
++        bg_client.write_to_file(filename)
++        gcmd.respond_info("Writing raw accelerometer data to %s file"
++                          % (filename,))
++    cmd_ACCELEROMETER_QUERY_help = "Query accelerometer for the current values"
++    def cmd_ACCELEROMETER_QUERY(self, gcmd):
++        aclient = self.chip.start_internal_client()
++        self.printer.lookup_object('toolhead').dwell(1.)
++        aclient.finish_measurements()
++        values = aclient.get_samples()
++        if not values:
++            raise gcmd.error("No accelerometer measurements found")
++        _, accel_x, accel_y, accel_z = values[-1]
++        gcmd.respond_info("accelerometer values (x, y, z): %.6f, %.6f, %.6f"
++                          % (accel_x, accel_y, accel_z))
++    cmd_ACCELEROMETER_DEBUG_READ_help = "Query register (for debugging)"
++    def cmd_ACCELEROMETER_DEBUG_READ(self, gcmd):
++        reg = gcmd.get("REG", minval=0, maxval=126, parser=lambda x: int(x, 0))
++        val = self.chip.read_reg(reg)
++        gcmd.respond_info("Accelerometer REG[0x%x] = 0x%x" % (reg, val))
++    cmd_ACCELEROMETER_DEBUG_WRITE_help = "Set register (for debugging)"
++    def cmd_ACCELEROMETER_DEBUG_WRITE(self, gcmd):
++        reg = gcmd.get("REG", minval=0, maxval=126, parser=lambda x: int(x, 0))
++        val = gcmd.get("VAL", minval=0, maxval=255, parser=lambda x: int(x, 0))
++        self.chip.set_reg(reg, val)
++
+ # Printer class that controls ADXL345 chip
+ class ADXL345:
+     def __init__(self, config):

@@ -1,0 +1,29 @@
+--- ../q1pro-klipper-backup/klipper/klippy/extras/virtual_sdcard.py	2024-08-31 10:12:40.000000000 +0800
++++ ../klipper/klippy/extras/virtual_sdcard.py	2025-02-12 06:31:06.384975338 +0800
+@@ -4,8 +4,8 @@
+ #
+ # This file may be distributed under the terms of the GNU GPLv3 license.
+ import os, sys, logging
++from importlib import reload
+ reload(sys)
+-sys.setdefaultencoding('utf-8')
+ 
+ VALID_GCODE_EXTS = ['gcode', 'g', 'gco']
+ 
+@@ -243,7 +243,7 @@
+         file_path = "/home/mks/scripts/plr/plr_record"
+         if os.path.exists(file_path):
+             os.remove(file_path)
+-        plr_file = open(file_path, 'w', buffering=0)
++        plr_file = open(file_path, 'w',buffering=-1)
+ 
+         while not self.must_pause_work:
+             if not lines:
+@@ -288,6 +288,7 @@
+                 if self.lines % self.save_every_n_lines == 0:
+                     plr_file.seek(0)
+                     plr_file.write(str(self.lines))
++                    plr_file.flush()
+                     plr_file.truncate()
+ 
+                 self.gcode.run_script(line)

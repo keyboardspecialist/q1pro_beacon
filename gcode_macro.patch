@@ -1,0 +1,588 @@
+--- ../q1pro-klipper-backup/klipper_config/gcode_macro.cfg	2025-02-04 08:08:11.000000000 +0800
++++ ../klipper_config/gcode_macro.cfg	2025-02-12 06:27:21.477677990 +0800
+@@ -9,49 +9,49 @@
+ # V4.4.21 2024-6-22
+ # update: Enable chamber exhaust fan by default when chamber temp not set
+ 
+-[gcode_macro test_zoffset]
+-gcode:
+-    G28
+-    get_zoffset
+-    G1 X{120 - printer.probe["x_offset"]} Y{120 - printer.probe["y_offset"]} F9000
+-    G1 Z10 F600
+-    probe
+-    M400
+-    G4 P5000
+-    G1 Z10 F600
++# [gcode_macro test_zoffset]
++# gcode:
++#     G28
++#     get_zoffset
++#     G1 X{120 - printer.probe["x_offset"]} Y{120 - printer.probe["y_offset"]} F9000
++#     G1 Z10 F600
++#     probe
++#     M400
++#     G4 P5000
++#     G1 Z10 F600
+ 
+ [gcode_macro move_subzoffset]
+ gcode:
+      
+     G1 Z{printer.probe.last_z_result} F600
+ 
+-[gcode_macro get_zoffset]
+-gcode:
+-    G1 Z10 F600
+-    Z_DOUDONG
+-    ;G4 P500
+-    QIDI_PROBE_PIN_1
+-    M204 S30
+-    G4 P500
+-    ;probe probe_speed=5 lift_speed=5 samples=5 sample_retract_dist=5
+-    probe probe_speed=2 lift_speed=2 samples=5 sample_retract_dist=10
+-    move_subzoffset
+-    M114
+-    SET_KINEMATIC_POSITION Z=-0.07
+-    G1 Z30 F600
+-    QIDI_PROBE_PIN_2
+-    M204 S10000
++# [gcode_macro get_zoffset]
++# gcode:
++#     G1 Z10 F600
++#     Z_DOUDONG
++#     ;G4 P500
++#     QIDI_PROBE_PIN_1
++#     M204 S30
++#     G4 P500
++#     ;probe probe_speed=5 lift_speed=5 samples=5 sample_retract_dist=5
++#     probe probe_speed=2 lift_speed=2 samples=5 sample_retract_dist=10
++#     move_subzoffset
++#     M114
++#     SET_KINEMATIC_POSITION Z=-0.07
++#     G1 Z30 F600
++#     QIDI_PROBE_PIN_2
++#     M204 S10000
+ 
+-[gcode_macro save_zoffset]
+-gcode:
+-    {% if printer.gcode_move.homing_origin.z < 0.5 %}
+-       SAVE_VARIABLE VARIABLE=z_offset VALUE={printer.gcode_move.homing_origin.z}
+-    {% endif %}
++# [gcode_macro save_zoffset]
++# gcode:
++#     {% if printer.gcode_move.homing_origin.z < 0.5 %}
++#        SAVE_VARIABLE VARIABLE=z_offset VALUE={printer.gcode_move.homing_origin.z}
++#     {% endif %}
+ 
+-[gcode_macro set_zoffset]        
+-gcode:
+-    {% set z = printer.save_variables.variables.z_offset %}
+-    SET_GCODE_OFFSET Z={z} MOVE=0
++# [gcode_macro set_zoffset]        
++# gcode:
++#     {% set z = printer.save_variables.variables.z_offset %}
++#     SET_GCODE_OFFSET Z={z} MOVE=0
+ 
+ [gcode_macro CLEAR_NOZZLE_PLR]
+ gcode:
+@@ -164,7 +164,10 @@
+     {% set bedtemp = params.BED|int %}
+     {% set hotendtemp = params.HOTEND|int %}
+     {% set chambertemp = params.CHAMBER|default(0)|int %}
+-    set_zoffset
++
++    SET_GCODE_VARIABLE MACRO=_APPLY_NOZZLE_OFFSET VARIABLE=hotend_temp VALUE={hotendtemp}
++
++   # set_zoffset
+     {% if chambertemp == 0 %}
+         M106 P3 S255
+     {% endif %}
+@@ -173,7 +176,7 @@
+     M141 S{chambertemp}
+     G28    
+     CLEAR_NOZZLE HOTEND={hotendtemp}
+-    test_zoffset
++   # test_zoffset
+     M190 S{bedtemp}   
+     #    Z_TILT_ADJUST
+     G29
+@@ -261,90 +264,90 @@
+     BED_MESH_CLEAR      
+     SET_FILAMENT_SENSOR SENSOR=fila ENABLE=0
+ 
+-[homing_override]
+-axes:xyz
+-gcode: 
+-    {% set HOME_CUR = 1 %}
+-    {% set driver_config = printer.configfile.settings['tmc2240 stepper_x'] %}
+-    {% set RUN_CUR = driver_config.run_current %}
+-    {% set HOLD_CUR = driver_config.hold_current %}
+-    M204 S10000
+-    M220 S100
+-	{% if params.X is defined %}
+-	    SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR * 0.7} 
+-        G28 X
+-		SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR}     
+-        BEEP I=1 DUR=100       
+-        G1 X10 F1200
+-    {% endif %}
+-
+-    {% if params.Y is defined %}
+-		SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR * 0.9} 
+-		G28 Y
+-		SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR}  
+-        BEEP I=1 DUR=100          
+-       G1 Y10 F1200
+-    {% endif %}
+-
+-    {% if params.Z is defined %}
+-        SET_KINEMATIC_POSITION Z={printer.toolhead.axis_maximum.z-5}
+-        QIDI_PROBE_PIN_2
+-        probe samples=2
+-        SET_KINEMATIC_POSITION Z=1.9
+-        G1 Z10 F600
+-        Z_DOUDONG
+-        QIDI_PROBE_PIN_1
+-        probe probe_speed=10
+-        SET_KINEMATIC_POSITION Z=-0.1
+-        G1 Z30 F480
+-    {% endif %}
+-
+-    {% if params.X is undefined %}
+-    {% if params.Y is undefined %}
+-    {% if params.Z is undefined %}
+-        SET_KINEMATIC_POSITION X=0
+-        SET_KINEMATIC_POSITION Y=0
+-        SET_KINEMATIC_POSITION Z={printer.toolhead.axis_maximum.z-10}
+-        G91
+-        G1 Z7 F600	
+-        G1 X10 F2400
+-        G1 Y10 F2400
+-        G4 P2000
+-    
+-       SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR * 0.8} 
+-        G28 X
+-    	SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR} 
+-        BEEP I=1 DUR=100  
+-        G1 X10 F1200
+-    
+-    	SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR * 0.9} 
+-    	G28 Y
+-    	SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR} 
+-        BEEP I=1 DUR=100        
+-        G1 Y10 F1200
+-
+-        SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR * 0.8} 
+-        G28 X
+-    	SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR} 
+-        BEEP I=1 DUR=100  
+-        G1 X10 F1200
++# [homing_override]
++# axes:xyz
++# gcode: 
++#     {% set HOME_CUR = 1 %}
++#     {% set driver_config = printer.configfile.settings['tmc2240 stepper_x'] %}
++#     {% set RUN_CUR = driver_config.run_current %}
++#     {% set HOLD_CUR = driver_config.hold_current %}
++#     M204 S10000
++#     M220 S100
++# 	{% if params.X is defined %}
++# 	    SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR * 0.7} 
++#         G28 X
++# 		SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR}     
++#         BEEP I=1 DUR=100       
++#         G1 X10 F1200
++#     {% endif %}
+ 
+-        SET_KINEMATIC_POSITION Z={printer.toolhead.axis_maximum.z-10}
++#     {% if params.Y is defined %}
++# 		SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR * 0.9} 
++# 		G28 Y
++# 		SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR}  
++#         BEEP I=1 DUR=100          
++#        G1 Y10 F1200
++#     {% endif %}
+ 
+-        G90
+-        G1 X120 Y120 F7800
+-        G91
+-        QIDI_PROBE_PIN_2
+-        G28 Z
+-        G1 Z30  F600
+-    {% endif %}
+-    {% endif %}
+-    {% endif %}
+-    SET_TMC_CURRENT STEPPER=stepper_x CURRENT={RUN_CUR} 
+-    SET_TMC_CURRENT STEPPER=stepper_y CURRENT={RUN_CUR} 
+-    M204 S10000
+-    G90
+-    QIDI_PROBE_PIN_2
++#     {% if params.Z is defined %}
++#         SET_KINEMATIC_POSITION Z={printer.toolhead.axis_maximum.z-5}
++#         QIDI_PROBE_PIN_2
++#         probe samples=2
++#         SET_KINEMATIC_POSITION Z=1.9
++#         G1 Z10 F600
++#         Z_DOUDONG
++#         QIDI_PROBE_PIN_1
++#         probe probe_speed=10
++#         SET_KINEMATIC_POSITION Z=-0.1
++#         G1 Z30 F480
++#     {% endif %}
++
++#     {% if params.X is undefined %}
++#     {% if params.Y is undefined %}
++#     {% if params.Z is undefined %}
++#         SET_KINEMATIC_POSITION X=0
++#         SET_KINEMATIC_POSITION Y=0
++#         SET_KINEMATIC_POSITION Z={printer.toolhead.axis_maximum.z-10}
++#         G91
++#         G1 Z7 F600	
++#         G1 X10 F2400
++#         G1 Y10 F2400
++#         G4 P2000
++    
++#        SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR * 0.8} 
++#         G28 X
++#     	SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR} 
++#         BEEP I=1 DUR=100  
++#         G1 X10 F1200
++    
++#     	SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR * 0.9} 
++#     	G28 Y
++#     	SET_TMC_CURRENT STEPPER=stepper_y CURRENT={HOME_CUR} 
++#         BEEP I=1 DUR=100        
++#         G1 Y10 F1200
++
++#         SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR * 0.8} 
++#         G28 X
++#     	SET_TMC_CURRENT STEPPER=stepper_x CURRENT={HOME_CUR} 
++#         BEEP I=1 DUR=100  
++#         G1 X10 F1200
++
++#         SET_KINEMATIC_POSITION Z={printer.toolhead.axis_maximum.z-10}
++
++#         G90
++#         G1 X120 Y120 F7800
++#         G91
++#         QIDI_PROBE_PIN_2
++#         G28 Z
++#         G1 Z30  F600
++#     {% endif %}
++#     {% endif %}
++#     {% endif %}
++#     SET_TMC_CURRENT STEPPER=stepper_x CURRENT={RUN_CUR} 
++#     SET_TMC_CURRENT STEPPER=stepper_y CURRENT={RUN_CUR} 
++#     M204 S10000
++#     G90
++#     QIDI_PROBE_PIN_2
+ 
+ [gcode_macro SHAPER_CALIBRATE]
+ rename_existing: RESHAPER_CALIBRATE
+@@ -355,7 +358,7 @@
+ gcode:
+     SET_IDLE_TIMEOUT TIMEOUT={printer.configfile.settings.idle_timeout.timeout}         ; set timeout back to configured value
+     CLEAR_PAUSE
+-    save_zoffset
++    #save_zoffset
+     M106 P2 S0
+     M106 P0 S0
+     M106 P3 S0
+@@ -390,7 +393,7 @@
+ 
+     SET_IDLE_TIMEOUT TIMEOUT={printer.configfile.settings.idle_timeout.timeout}         ; set timeout back to configured value
+     CLEAR_PAUSE
+-    save_zoffset
++    #save_zoffset
+     M106 P2 S0
+     M106 P0 S0
+     M106 P3 S0
+@@ -620,19 +623,28 @@
+         {% endif %}
+     {% endif %}
+ 
++# [gcode_macro M4027]
++# gcode:
++#     G1 X{120 - printer.probe["x_offset"]} Y{120 - printer.probe["y_offset"]} F9000
++#     probe
++#     save_meshoffset
++#     G1 z10 F600
++#     SET_GCODE_OFFSET Z=0 MOVE=1
++#     BED_MESH_CALIBRATE
++#     set_meshoffset
++#     G0 Z50 F600
++#     G0 X0 Y0 F9000
++#     M400
++#     M118 Bed mesh calibrate complete
++#     SAVE_CONFIG
+ [gcode_macro M4027]
+ gcode:
+-    G1 X{120 - printer.probe["x_offset"]} Y{120 - printer.probe["y_offset"]} F9000
+-    probe
+-    save_meshoffset
+-    G1 z10 F600
+-    SET_GCODE_OFFSET Z=0 MOVE=1
+-    BED_MESH_CALIBRATE
+-    set_meshoffset
+-    G0 Z50 F600
+-    G0 X0 Y0 F9000
+-    M400
+-    M118 Bed mesh calibrate complete
++    { action_respond_info("M4027 called")  }
++    G32                                     # Set bed meshing to default profile
++    G29                                     # Do full homing, z-tilt, and bed meshing
++    G31                                     # Set bed meshing back to kamp profile
++    M400                                    # Wait for all outstanding G-code moves to finish
++    M118 Bed mesh calibrate complete        # Tell xindi we're done
+     SAVE_CONFIG
+ 
+ [gcode_macro M4028]
+@@ -749,59 +761,206 @@
+ gcode:
+     SET_GCODE_VARIABLE MACRO=set_meshoffset VARIABLE=zoffset VALUE={printer.probe.last_z_result}
+ 
++# [gcode_macro G29]
++# variable_k:1
++# gcode:
++#     BED_MESH_CLEAR
++#     {% if k|int==1 %}
++#         G28   
++#         get_zoffset
++#         G1 X{120 - printer.probe["x_offset"]} Y{120 - printer.probe["y_offset"]} F9000
++#         G1 Z10 F600
++#         probe
++#         save_meshoffset
++#         G1 z10 F600
++#         BED_MESH_CALIBRATE PROFILE=kamp
++#         SAVE_VARIABLE VARIABLE=profile_name VALUE='"kamp"'
++#         set_meshoffset        
++#         SAVE_CONFIG_QD
++#     {% else %}
++#         g28
++#         get_zoffset
++#         BED_MESH_PROFILE LOAD=default
++#         SAVE_VARIABLE VARIABLE=profile_name VALUE='"default"'
++#     {% endif %}
++
++# [gcode_macro M204]
++# rename_existing: M99204
++# gcode:
++#     {% if params.S is defined %}
++#         {% set s = params.S|float %}
++#     {% endif %}
++#     {% if params.P is defined %}
++#     {% if params.T is defined %}
++#         {% set s = [params.P|float ,params.T|float] | min %}
++#     {% endif %}
++#     {% endif %}
++
++#     SET_VELOCITY_LIMIT ACCEL={s}
++#     SET_VELOCITY_LIMIT ACCEL_TO_DECEL={s/2}
+ [gcode_macro G29]
+ variable_k:1
++description: Home all, generate a bed mesh, and apply global Z nozzle offset
+ gcode:
+-    BED_MESH_CLEAR
++    {% set z_home_temp = printer["gcode_macro _APPLY_NOZZLE_OFFSET"].z_homing_temperature|int %}
++    # Turn off all fans to minimise sources of vibration and clear any old state
++    M104 S{z_home_temp}                     # Commence nozzle warmup for z homing
++    M141 S0                                 # Turn off chamber heater
++    M106 S0                                 # Turn off part cooling fan
++    M106 P2 S0                              # Turn off auxiliary part cooling fan
++    M106 P3 S0                              # Turn off chamnber exhaust/circulation fan        
++    BED_MESH_CLEAR                          # Clear out any existing bed meshing context
++    SET_GCODE_OFFSET Z=0                    # Comnpletely reset all prior notions of Z offset
++    SET_KINEMATIC_POSITION CLEAR=XYZ        # Clear all kinematic repositionings
++    G28 X Y                                 # Home X and Y Axes
++    G28 Z METHOD=CONTACT CALIBRATE=1        # Home Z axis, and calibrate beacon                                               
++    Z_TILT_ADJUST                           # Ensure bed is level    
++    G28 Z METHOD=CONTACT CALIBRATE=0        # Re-establish Z end-stop after bed levelling
+     {% if k|int==1 %}
+-        G28   
+-        get_zoffset
+-        G1 X{120 - printer.probe["x_offset"]} Y{120 - printer.probe["y_offset"]} F9000
+-        G1 Z10 F600
+-        probe
+-        save_meshoffset
+-        G1 z10 F600
+-        BED_MESH_CALIBRATE PROFILE=kamp
++        BED_MESH_CALIBRATE RUNS=2 PROFILE=kamp
++        BED_MESH_PROFILE LOAD=kamp
+         SAVE_VARIABLE VARIABLE=profile_name VALUE='"kamp"'
+-        set_meshoffset        
+-        SAVE_CONFIG_QD
+     {% else %}
+-        g28
+-        get_zoffset
++        BED_MESH_CALIBRATE RUNS=2 PROFILE=default
+         BED_MESH_PROFILE LOAD=default
+         SAVE_VARIABLE VARIABLE=profile_name VALUE='"default"'
+     {% endif %}
++    _APPLY_NOZZLE_OFFSET
++
++#this is vibrate code not compatible with beacon
++# [gcode_macro Z_DOUDONG]
++# gcode:
++#     M204 S30
++#     G90
++#     G0 Z1
++#     G91
++#     G4 P3000
++#      SET_PIN PIN=ctlyd VALUE=1 
++#     {% for z in range(1,7) %}
++#         G1 Z10 F900
++#         G1 Z-10 F900
++#     {% endfor %}
++#     SET_PIN PIN=ctlyd VALUE=0
++#     G4 P1000
++#     G1 Z4
++#     G90
++#    M204 S10000
++
++
++# _APPLY_NOZZLE_OFFSET` implements an adaptive Z offset management system that attempts to
++# automatically set the correct Z offset depending upon the first layer filament temperature
++[gcode_macro _APPLY_NOZZLE_OFFSET]
++description: Determine the global nozzle offset and apply
++variable_z_homing_temperature: 145      # Temperature that we home the nozzle at to determine Z=0
++variable_reference_position: 5.0        # A safe Z position at which we'll apply the offset change
++variable_expansion_factor: 0.00099      # Amount hotend lengthens by per 1C temperature rise
++variable_hotend_temp: 250               # Target hotend temp (typically set by PRINT_START)
++gcode:
++    # Set our working variables.  We treat everything as floats for these calculations
++    {% set z_home_temp = (printer["gcode_macro _APPLY_NOZZLE_OFFSET"].z_homing_temperature)|float %}
++    {% set reference_position = (printer["gcode_macro _APPLY_NOZZLE_OFFSET"].reference_position)|float %}
++    {% set expansion_factor = (printer["gcode_macro _APPLY_NOZZLE_OFFSET"].expansion_factor)|float %}
++    {% set hotend_temp = (printer["gcode_macro _APPLY_NOZZLE_OFFSET"].hotend_temp)|float %}
++
++    # Calculate Offset and sanity check it so we don't end up etching the build plate
++    {% set temperature_offset = ((hotend_temp - z_home_temp) * expansion_factor)|float %}
++    {% if temperature_offset < 0 %}
++        {% set temperature_offset = 0|float %}
++    {% endif %}
++
++    # Determine the Z target position
++    {% set target_position = (reference_position + temperature_offset)|float %}
++
++    # Report to the console what we've determined
++    { action_respond_info("Applying Z offset adjustment for hotend temperature of %.1f°C" % hotend_temp|float) }
++    { action_respond_info("  Reference Position = %f" % reference_position|float) }
++    { action_respond_info("  Temperature Offset= %f" % temperature_offset|float) }
++    { action_respond_info("  Total Offset = %f" % (temperature_offset)|float) }
++    { action_respond_info("  Target Position = %f" % target_position|float) }
++
++    SET_GCODE_OFFSET Z=0                            # Clear any pre-existing Gcode offsets
++    G1 X{printer.configfile.settings.beacon.home_xy_position[0]} Y{printer.configfile.settings.beacon.home_xy_position[1]} F7200    # Move X/Y to Z homing position
++    G1 Z{target_position} F600                      # Move Z to determined target position
++    M400                                            # Wait for prior gcode-commands to finish
++    SET_KINEMATIC_POSITION Z={reference_position}   # Set target position to be the reference position
++    G1 Z{reference_position} F600                   # Move Z to reference position.  Ideally the bed should not move
++    M400
+ 
+-[gcode_macro M204]
+-rename_existing: M99204
++# APPLY_FILAMENT_OFFSET allows for users to correct the offset for filaments that aren't properly
++# handled by the automatic Z offset management system.  It should very rarely need to be used.
++[gcode_macro APPLY_FILAMENT_OFFSET]
++description: Apply a Z offset adjustment for a specific filament
+ gcode:
+-    {% if params.S is defined %}
+-        {% set s = params.S|float %}
+-    {% endif %}
+-    {% if params.P is defined %}
+-    {% if params.T is defined %}
+-        {% set s = [params.P|float ,params.T|float] | min %}
+-    {% endif %}
+-    {% endif %}
++    {% set filament_z = params.Z|default(0)|float %}
++    { action_respond_info("Setting Filament Offset to %.3fmm" % (filament_z)) }
++    SET_GCODE_OFFSET Z_ADJUST={filament_z} MOVE=1 SPEED=3
+ 
+-    SET_VELOCITY_LIMIT ACCEL={s}
+-    SET_VELOCITY_LIMIT ACCEL_TO_DECEL={s/2}
+ 
+-[gcode_macro Z_DOUDONG]
++[gcode_macro zoffset]
++description: Apply baseline Z offset which is always zero for Beacon Contact
+ gcode:
+-    M204 S30
+-    G90
+-    G0 Z1
+-    G91
+-    G4 P3000
+-     SET_PIN PIN=ctlyd VALUE=1 
+-    {% for z in range(1,7) %}
+-        G1 Z10 F900
+-        G1 Z-10 F900
+-    {% endfor %}
+-    SET_PIN PIN=ctlyd VALUE=0
+-    G4 P1000
+-    G1 Z4
+-    G90
+-#    M204 S10000
++    SET_GCODE_OFFSET Z=0 MOVE=1             # Apply a zero gcode_offset
++
++# Development test
++[gcode_macro test_zoffset]
++description: Debugging test to compare the probe's contact and proximity Z Offset values
++gcode:
++    G28 X Y
++    get_zoffset
++    M400
++    BEACON_OFFSET_COMPARE
++    G4 P5000
++    G1 Z10 F600
+ 
++[gcode_macro get_zoffset]
++description: Homes nozzle against build plate and applies global z offset
++gcode:                                  
++    G28 Z METHOD=CONTACT CALIBRATE=1        # Use contact to find our Z end-stop                
++    _APPLY_NOZZLE_OFFSET
++
++[gcode_macro save_zoffset]
++description: Use APPLY_FILAMENT_OFFSET instead
++gcode:
++    { action_respond_info("Use APPLY_FILAMENT_OFFSET instead") }
++
++[gcode_macro set_zoffset]
++description: Apply baseline Z offset which is always zero for Beacon Contact      
++gcode: 
++    SET_GCODE_OFFSET Z=0 MOVE=1             # Apply a zero gcode_offset
++
++
++[gcode_macro _BEACON_HOME_PRE_X]
++gcode:
++    {% set RUN_CURRENT = printer.configfile.settings['tmc2240 stepper_x'].run_current|float %}
++    SET_TMC_CURRENT STEPPER=stepper_x CURRENT={RUN_CURRENT * 0.6}
++
++[gcode_macro _BEACON_HOME_POST_X]
++gcode:
++    {% set RUN_CURRENT = printer.configfile.settings['tmc2240 stepper_x'].run_current|float %}
++    # Move away
++    G1 X20 F9000
++    M400
++    SET_TMC_CURRENT STEPPER=stepper_x CURRENT={RUN_CURRENT}
++
++[gcode_macro _BEACON_HOME_PRE_Y]
++gcode:
++    {% set RUN_CURRENT = printer.configfile.settings['tmc2240 stepper_y'].run_current|float %}
++    SET_TMC_CURRENT STEPPER=stepper_y CURRENT={RUN_CURRENT * 0.8}       
++
++[gcode_macro _BEACON_HOME_POST_Y]
++gcode:
++    {% set RUN_CURRENT = printer.configfile.settings['tmc2240 stepper_y'].run_current|float %}
++    # Move away
++    G1 Y20 F9000
++    M400
++    SET_TMC_CURRENT STEPPER=stepper_y CURRENT={RUN_CURRENT}
++
++[gcode_macro _BEACON_CONTACT_PRE_Z]
++gcode:
++    {% set z_home_temp = (printer["gcode_macro _APPLY_NOZZLE_OFFSET"].z_homing_temperature)|int %}
++    M104 S{z_home_temp}
++    TEMPERATURE_WAIT SENSOR=extruder MINIMUM={z_home_temp - 1} MAXIMUM={z_home_temp + 1}
++
++[gcode_macro _BEACON_CONTACT_POST_Z]
++gcode:
++    M104 S0
+\ No newline at end of file
