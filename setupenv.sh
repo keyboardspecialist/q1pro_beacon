@@ -226,12 +226,12 @@ if [ $DO_ALL -eq 1 ] || [ $DO_UPDATE -eq 1 ]; then
     update_python || exit 1
 fi
 
-if [ $DO_ALL -eq 1 ] || [ $DO_PATCH -eq 1 ]; then
-    apply_patches || exit 1
-fi
-
 if [ $DO_ALL -eq 1 ] || [ $DO_INSTALL -eq 1 ]; then
     install_beacon3d || exit 1
+fi
+
+if [ $DO_ALL -eq 1 ] || [ $DO_PATCH -eq 1 ]; then
+    apply_patches || exit 1
 fi
 
 log "INFO" "All operations completed successfully"
