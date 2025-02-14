@@ -83,7 +83,7 @@ bin/pip install -r ../klipper/scripts/klippy-requirements.txt
 
 The Q1 Pro runs an old version of klipper and lacks source updates for Python3 and Beacon3d compatilibity
 
-The 3 files affected are `configfile.py`, `adxl345.py`, and `virtual_sdcard.py`
+The 4 files affected are `configfile.py`, `adxl345.py`, `probe.py`, and `virtual_sdcard.py`
 
 The patches need to be run from the git source directory and take the form
 
