@@ -176,8 +176,7 @@ apply_patches() {
             if [ "$(basename "$patch_file")" = "$printercfg"* ]; then
                 if [ "$(basename "$patch_file")" = "$printercfg" ]; then
                     local bdev=$(ls /dev/serial/by-id/usb-Beacon* | head -n1)
-                    #sed -i "s|{{beacon_dev}}|$bdev|g" "$PATCH_DIR/$printercfg"
-                    sed -i '' "s#{{beacon_dev}}#$bdev#g" "$PATCH_DIR/$printercfg"
+                    sed -i "s|{{beacon_dev}}|$bdev|g" "$PATCH_DIR/$printercfg"
                 fi
             fi
 
