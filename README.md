@@ -43,6 +43,7 @@ Running the script `./setupenv.sh` with no arguments will output the main menu.
 
 **NOTE: If you run `--all` or `--patch` be sure your beacon is plugged into USB, so the patch can find its device ID**
 
+**EXAMPLE: `./setupenv.sh -m shroudv1 --all`**
 
 ## backup env
 
