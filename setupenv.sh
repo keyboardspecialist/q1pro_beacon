@@ -5,6 +5,10 @@ KLIPPER_DIR="${HOME}/klipper"
 KLIPPY_ENV="${HOME}/klippy-env"
 CONFIG_DIR="${HOME}/klipper_config"
 BACKUP_DIR="${HOME}/q1pro-klipper-backup"
+PATCH_DIR=$PWD
+
+#patch based on mount selected
+MOUNT_TYPE=""
 
 # Print usage information
 usage() {
@@ -17,6 +21,7 @@ usage() {
     echo "  -i, --install     Install Beacon3D"
     echo "  -k, --klipper     Specify custom Klipper directory"
     echo "  -c, --config      Specify custom config directory"
+    echo "  -m, --mount       Specify mount type [sidev1, shroudv1]"
     echo "  -h, --help        Display this help message"
     exit 1
 }
@@ -130,10 +135,25 @@ install_beacon3d() {
     fi
 }
 
+get_printer_cfg() {
+    local mount=$1
+    shift
+    case $mount in
+    "sidev1")
+        echo "printercfg_side_mount.patch"
+        ;;
+    "shroudv1")
+        echo "printercfg_shroud_mount.patch"
+        ;;
+    default)
+        echo "bad"
+        ;;
+    esac
+}
+
 # Apply patches
 apply_patches() {
     log "INFO" "Applying patches..."
-
     if [ ! -d "$PATCH_DIR" ]; then
         log "ERROR" "Patch directory not found: $PATCH_DIR"
         return 1
@@ -147,14 +167,20 @@ apply_patches() {
     # Navigate to Klipper directory
     cd "$KLIPPER_DIR" || exit 1
 
+    local printercfg=$(get_printer_cfg $MOUNT_TYPE)
+
     # Apply each patch file
     for patch_file in "$PATCH_DIR"/*.patch; do
         if [ -f "$patch_file" ]; then
             log "INFO" "Applying patch: $(basename "$patch_file")"
-            if [ "$(basename "$patch_file")" = "printer_cfg.patch" ]; then
-                local bdev = $( ls /dev/serial/by-id/usb-Beacon* | head -n1 )
-                sed -i "s|{{beacon_dev}}|$bdev|g" "$patch_file"
+            if [ "$(basename "$patch_file")" = "$printercfg"* ]; then
+                if [ "$(basename "$patch_file")" = "$printercfg" ]; then
+                    local bdev=$(ls /dev/serial/by-id/usb-Beacon* | head -n1)
+                    #sed -i "s|{{beacon_dev}}|$bdev|g" "$PATCH_DIR/$printercfg"
+                    sed -i '' "s#{{beacon_dev}}#$bdev#g" "$PATCH_DIR/$printercfg"
+                fi
             fi
+
             if patch < "$patch_file"; then
                 log "INFO" "Successfully applied patch: $(basename "$patch_file")"
             else
@@ -200,6 +226,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -c|--config)
             CONFIG_DIR="$2"
+            shift 2
+            ;;
+        -m|--mount)
+            MOUNT_TYPE="$2"
             shift 2
             ;;
         -h|--help)
