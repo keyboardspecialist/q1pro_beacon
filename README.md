@@ -39,6 +39,8 @@ chmod +x setupenv.sh
 
 Running the script `./setupenv.sh` with no arguments will output the main menu.
 
+**NOTE: Use the `-m|--mount` option to specify which mount you are configuring for**
+
 **NOTE: If you run `--all` or `--patch` be sure your beacon is plugged into USB, so the patch can find its device ID**
 
 
@@ -107,6 +109,9 @@ patch < printer_cfg.patch
 ```
 
 **NOTE: the x_offset and y_offset in [beacon] are for the supplied mount. If you design your own/move the probe, these need to reflect the new position**
+
+`printercfg_side_mount.patch` - for the original side mount design
+`printercfg_shroud_mount.patch` - for the new shroud mount
 
 Not included in the printer.cfg patch is removing a possible additional `[smart_effector]` block in the commented out section at the bottom marked as *do not edit*.
 I wasn't sure if I could guarantee the patch would always succeed there, so just remove it by hand. Otherwise you will get the "pin not set im smart_effector" error.
