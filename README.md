@@ -7,10 +7,6 @@ Shroud is a remix of https://www.printables.com/model/1149931-qidi-q1-pro-improv
 
 These instructions are for the Beacon3d RevH board.
 
-The mount and fan shroud provided are preliminary designs and aren't guaranteed to perform well with regards to both cooling and input shaping/resonance.
-
-The Beacon mount swaps the stock m3x25 screws for m3x16 to mount to the toolhead. Otherwise it uses the included m3x6 screws to mount the board.
-
 * [Pull](#pull-this-repo)
 * [Automated Script](#automated-script)
 * [Backup](#backup-env)
@@ -18,6 +14,18 @@ The Beacon mount swaps the stock m3x25 screws for m3x16 to mount to the toolhead
 * [Python Patch](#python-patches)
 * [Printer Config](#printer-config)
 * [Manual Config](#printer-config-manually)
+
+## Mounts
+
+### Side Mount
+
+This mount and fan shroud are preliminary designs and aren't guaranteed to perform well with regards to both cooling and input shaping/resonance.
+
+The Beacon mount swaps the stock m3x25 screws for m3x16 to mount to the toolhead. Otherwise it uses the included m3x6 screws to mount the board.
+
+### Shroud Mount
+
+This mount places the beacon directly on the blower shroud eliminating a secondary mount. When printing, the cable clip needs supports, so enable supports (ideally tree) and use a support blocker to prohibit them anywhere else.
 
 ## Pull this repo
 
